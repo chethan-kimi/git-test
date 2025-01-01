@@ -11,31 +11,35 @@ pipeline {
                 echo 'Static HTML - No Build Required'
             }
         }
-        stage('Archive Artifacts') {
-            steps {
-                archiveArtifacts artifacts: '**/*', fingerprint: true
-            }
+stage('Upload to JFrog Artifactory') {
+    steps {
+        script {
+            // Define the Artifactory server
+            def server = Artifactory.server('Artifactory-Server')
+
+            // Define upload spec
+            def uploadSpec = '''{
+                "files": [
+                    {
+                        "pattern": "**/*.html",
+                        "target": "web-static-files/"
+                    },
+                    {
+                        "pattern": "**/*.css",
+                        "target": "web-static-files/"
+                    },
+                    {
+                        "pattern": "**/*.js",
+                        "target": "web-static-files/"
+                    }
+                ]
+            }'''
+
+            // Upload files to Artifactory
+            server.upload(uploadSpec)
         }
-        stage('Upload to JFrog Artifactory') {
-            steps {
-                rtServer (
-                    id: 'Artifactory-Server',
-                    url: 'https://trial116ruw.jfrog.io',
-                    credentialsId: 'artifactory-credentials-id'
-                )
-                rtUpload (
-                    serverId: 'Artifactory-Server',
-                    spec: '''{
-                        "files": [
-                            {
-                                "pattern": "**/*.html",
-                                "target": "web-static-files/"
-                            }
-                        ]
-                    }'''
-                )
-            }
-        }
+    }
+}
         stage('Deploy to AWS EC2') {
             steps {
                 sshPublisher(
