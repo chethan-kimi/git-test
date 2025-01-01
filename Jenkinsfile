@@ -11,6 +11,14 @@ pipeline {
                 echo 'Static HTML - No Build Required'
             }
         }
+        stage('Setup Artifactory') {
+            steps {
+                script {
+                    def artifactory = Artifactory.server('my-artifactory')
+                    echo "Artifactory server initialized: ${artifactory}"
+                }
+            }
+        }
 stage('Upload to JFrog Artifactory') {
     steps {
         script {
